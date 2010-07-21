@@ -2,14 +2,18 @@
 # Capistrano Recipes to manage EC2 Selenium Grid Clusters
 #
 
-require File.dirname(__FILE__) + '/../../lib/ruby/tcp_socket_extensions'
-
 ###### User Level Configuration ######
 
 set :keypair, ENV["EC2_KEYPAIR"]
 set :keypair_name, ENV["EC2_KEYPAIR_NAME"] || "grid-keypair"
+
+# the number of RC instances launched on a server is equal to the number of 
+# ports in this range. 
 set :remote_control_port_range, "5555-5560"
+
+# the number of ec2 server instances to launch for use as RCs
 set :remote_control_farms_count, 1
+
 set :launch_timeout, 240
 set :user, "grid"
 
@@ -18,8 +22,13 @@ set :user, "grid"
 # 22, 4444, 5900, 6000 and above port range (e.g. 5555-5560 by default)
 set :security_group, nil
 
+
+
+
+
 ##### Internal Configuration ######
 
+require File.dirname(__FILE__) + '/../../lib/ruby/tcp_socket_extensions'
 require File.dirname(__FILE__) + '/lib/selenium_grid/aws/ec2'
 require 'erb'
 
