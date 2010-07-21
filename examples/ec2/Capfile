@@ -11,6 +11,7 @@ set :keypair_name, ENV["EC2_KEYPAIR_NAME"] || "grid-keypair"
 set :remote_control_port_range, "5555-5560"
 set :remote_control_farms_count, 5
 set :launch_timeout, 240
+set :user, "grid"
 
 ##### Internal Configuration ######
 
@@ -150,7 +151,7 @@ namespace :hub do
   task :start do
     cloud.hub.run "nohup rake hub:start BACKGROUND=true", 
                  :pwd => selenium_grid_path,
-                 :su => "grid",
+                 :su => user,
                  :keypair => keypair
   end
 
@@ -158,7 +159,7 @@ namespace :hub do
   task :stop do
     cloud.hub.run 'rake hub:stop', 
                  :pwd => selenium_grid_path,
-                 :su => "grid",
+                 :su => user,
                  :keypair => keypair    
   end
 
@@ -211,7 +212,7 @@ namespace :rc do
     desc "Start VNC server on all Remote Control Farms"
     task :start do
       cloud.farms.each do |farm|
-        farm.run "nohup vncserver :0", :keypair => keypair, :su => "grid"
+        farm.run "nohup vncserver :0", :keypair => keypair, :su => user
       end
       ec2_client.authorize_port 5900
       ec2_client.authorize_port 6000
@@ -238,7 +239,7 @@ namespace :rc do
                :display => ":0",
                :path => "/usr/lib/firefox", 
                :pwd => selenium_grid_path,
-               :su => "grid",               
+               :su => user,
                :keypair => keypair
     end
   end
@@ -248,7 +249,7 @@ namespace :rc do
     cloud.farms.each do |farm|
       farm.run "rake rc:stop_all PORTS=#{remote_control_port_range}", 
                :pwd => selenium_grid_path,
-               :su => "grid",
+               :su => user,
                :keypair => keypair
     end
   end
