@@ -22,7 +22,8 @@ set :user, "grid"
 # 22, 4444, 5900, 6000 and above port range (e.g. 5555-5560 by default)
 set :security_group, nil
 
-
+# whether or not to launch VNC on each of the RC servers
+set :use_vnc, true
 
 
 
@@ -89,7 +90,7 @@ namespace :grid do
   desc "Start Selenium Grid Hub."
   task :start do
     hub.start
-    rc.vnc.start
+    rc.vnc.start if use_vnc
     TCPSocket.wait_for_service :host => cloud.hub.public_dns, :port => 4444, :timeout => launch_timeout
     rc.start
   end
