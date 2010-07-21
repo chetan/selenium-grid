@@ -9,7 +9,7 @@ require File.dirname(__FILE__) + '/../../lib/ruby/tcp_socket_extensions'
 set :keypair, ENV["EC2_KEYPAIR"]
 set :keypair_name, ENV["EC2_KEYPAIR_NAME"] || "grid-keypair"
 set :remote_control_port_range, "5555-5560"
-set :remote_control_farms_count, 5
+set :remote_control_farms_count, 1
 set :launch_timeout, 240
 set :user, "grid"
 
