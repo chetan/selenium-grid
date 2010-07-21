@@ -13,6 +13,11 @@ set :remote_control_farms_count, 1
 set :launch_timeout, 240
 set :user, "grid"
 
+# if nil, uses 'default' and opens required ports
+# if not nil, the given group must open the following required ports:
+# 22, 4444, 5900, 6000 and above port range (e.g. 5555-5560 by default)
+set :security_group, nil
+
 ##### Internal Configuration ######
 
 require File.dirname(__FILE__) + '/lib/selenium_grid/aws/ec2'
@@ -52,13 +57,17 @@ namespace :grid do
         +++++++++++++++++++++++++++++++++++++++++++++++
       EOS
     end
-    ec2_client.authorize_port 22
-    ec2_client.authorize_port 4444
-    ec2_client.authorize_port 5900
-    ec2_client.authorize_port 6000
-    boundaries = remote_control_port_range.split(/\s*-\s*/)
-    Range.new(boundaries.first, boundaries.last).each do |port|
-      ec2_client.authorize_port port
+    
+    if security_group.nil? then
+      # open ports if not using a custom security group
+      ec2_client.authorize_port 22
+      ec2_client.authorize_port 4444
+      ec2_client.authorize_port 5900
+      ec2_client.authorize_port 6000
+      boundaries = remote_control_port_range.split(/\s*-\s*/)
+      Range.new(boundaries.first, boundaries.last).each do |port|
+        ec2_client.authorize_port port
+      end
     end
   end
 
@@ -125,7 +134,9 @@ namespace :hub do
   task :boot do
     SeleniumGrid::AWS::Cloud.update do |cloud|
       puts "Starting a new EC2 Instance..."
-      cloud.hub = SeleniumGrid::AWS::Hub.boot_and_acquire_dns ami, :keypair => keypair_name
+      opts = {:keypair => keypair_name}
+      opts[:security_group] = security_group if not security_group.nil?
+      cloud.hub = SeleniumGrid::AWS::Hub.boot_and_acquire_dns ami, opts
       puts "Started new Hub at #{cloud.hub.public_dns}"
     end
     set :cloud, SeleniumGrid::AWS::Cloud.load
@@ -185,7 +196,9 @@ namespace :rc do
     SeleniumGrid::AWS::Cloud.update do |cloud|
       puts "Starting a new EC2 Instance..."
       begin
-        new_farm = SeleniumGrid::AWS::Server.boot_and_acquire_dns ami, :keypair => keypair_name
+        opts = {:keypair => keypair_name}
+        opts[:security_group] = security_group if not security_group.nil?
+        new_farm = SeleniumGrid::AWS::Server.boot_and_acquire_dns ami, opts
         cloud.farms << new_farm
         puts "Started new Remote Control farm at #{new_farm.public_dns}"
       rescue
@@ -214,8 +227,10 @@ namespace :rc do
       cloud.farms.each do |farm|
         farm.run "nohup vncserver :0", :keypair => keypair, :su => user
       end
-      ec2_client.authorize_port 5900
-      ec2_client.authorize_port 6000
+      if security_group.nil? then
+        ec2_client.authorize_port 5900
+        ec2_client.authorize_port 6000
+      end
     end
     
   end

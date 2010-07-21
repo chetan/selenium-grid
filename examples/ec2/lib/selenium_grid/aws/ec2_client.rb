@@ -20,7 +20,9 @@ module SeleniumGrid
       end
             
       def launch(ami, options ={})
-        output = ec2_shell "ec2-run-instances #{ami} -k #{options[:keypair]}"
+        cmd = "ec2-run-instances #{ami} -k #{options[:keypair]}"
+        cmd += " -g #{options[:security_group]}" if options.include? :security_group
+        output = ec2_shell(cmd)
         output =~ /INSTANCE\s+(i-\S+)\s+ami-/
         if $1 != nil
           $1
