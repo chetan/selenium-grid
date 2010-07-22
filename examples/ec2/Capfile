@@ -20,7 +20,12 @@ set :user, "grid"
 # if nil, uses 'default' and opens required ports
 # if not nil, the given group must open the following required ports:
 # 22, 4444, 5900, 6000 and above port range (e.g. 5555-5560 by default)
+# -g, --group GROUP
 set :security_group, nil
+
+# if not nil, launches the instance in the specified zone
+# -z, --availability-zone ZONE
+set :availability_zone, nil
 
 # whether or not to launch VNC on each of the RC servers
 set :use_vnc, true
@@ -146,6 +151,7 @@ namespace :hub do
       puts "Starting a new EC2 Instance..."
       opts = {:keypair => keypair_name}
       opts[:security_group] = security_group if not security_group.nil?
+      opts[:availability_zone] = availability_zone if not availability_zone.nil?
       cloud.hub = SeleniumGrid::AWS::Hub.boot_and_acquire_dns ami, opts
       puts "Started new Hub at #{cloud.hub.public_dns}"
     end
@@ -208,6 +214,7 @@ namespace :rc do
       begin
         opts = {:keypair => keypair_name}
         opts[:security_group] = security_group if not security_group.nil?
+        opts[:availability_zone] = availability_zone if not availability_zone.nil?
         new_farm = SeleniumGrid::AWS::Server.boot_and_acquire_dns ami, opts
         cloud.farms << new_farm
         puts "Started new Remote Control farm at #{new_farm.public_dns}"
