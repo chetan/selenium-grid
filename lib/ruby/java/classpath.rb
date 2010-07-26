@@ -20,7 +20,7 @@ module Java
     end
 
     def separator
-     PLATFORM['win32'] ? ";" : ":"
+      File::PATH_SEPARATOR
     end
 
   end
